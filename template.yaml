@@ -7,37 +7,17 @@ Resources:
     Properties:
       Handler: ask-delivery.handler
       Runtime: nodejs8.10
-    Environment: 
+      Environment: 
         Variables:
           TABLE_NAME: !Ref DeliveriesTable
           DELIVERY_STEP_FUNCTION: !Ref DeliveryProcessor
-    Events:
+      Events:
         AskDeliveryApi:
           Type: Api
           Properties:
             Path: /deliveries
             Method: POST
             RestApiId: !Ref AskDeliveryApi
-  AskDeliveryApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: 'prod'
-      Cors:
-        AllowOrigin: "'*'"
-      DefinitionBody:
-        swagger: 2.0
-        info:
-          title:
-            Ref: AWS::StackName
-        paths:
-          /deliveries:
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
-                responses: {}
   DeliveriesTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -96,6 +76,26 @@ Resources:
     Properties:
       Handler: notify-delivery.handler
       Runtime: nodejs8.10
+  AskDeliveryApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: 'prod'
+      Cors:
+        AllowOrigin: "'*'"
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /deliveries:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
+                responses: {}
 Outputs:
   ApiUrl:
     Description: The URL of the AskDeliveryApi endpoint 
