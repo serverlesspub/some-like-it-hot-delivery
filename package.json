@@ -4,9 +4,10 @@
   "description": "",
   "main": "ask-delivery.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "package": "aws cloudformation package --template-file template.yaml --s3-bucket app-sam --output-template-file output.yaml",
+    "deploy": "aws cloudformation deploy --template-file output.yaml --stack-name some-like-it-hot --capabilities CAPABILITY_IAM"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }
