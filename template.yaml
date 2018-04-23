@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  AskDelivery:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ask-delivery.handler
+      Runtime: nodejs8.10
+    Events:
+        AskDeliveryApi:
+          Type: Api
+          Properties:
+            Path: /deliveries
+            Method: POST
+            RestApiId: !Ref AskDeliveryApi
+  AskDeliveryApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: 'prod'
+      Cors:
+        AllowOrigin: '"*"'
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /deliveries:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
+                responses: {}
+    DeliveriesTable:
+      Type: AWS::Serverless::SimpleTable
+      Properties:
+        PrimaryKey:
+          Name: deliveryId
+          Type: String
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    DeliveryProcessor:
+      Type: AWS::StepFunctions::StateMachine
+      Properties:
+        StateMachineName: DeliveryMachine
+        DefinitionString: 
+          - |-
+              {
+                "Comment": "The Some Like It Hot Delivery State Machine",
+                "StartAt": "ProcessDelivery",
+                "States": {
+                  "ProcessDelivery": {
+                    "Type": "Wait",
+                    "Seconds": 5,
+                    "Next": "NotifyDelivery"
+                  },
+                  "NotifyDelivery": {
+                    "Type": "Task",
+                    "Resource": "${lambdaArn}",
+                    "End": true
+                  }
+                }
+              }
+          - {lambdaArn: !GetAtt [ NotifyDeliveries, Arn ]}
+        RoleArn: !GetAtt [ DeliveryStatesExecutionRole, Arn ]
+    DeliveryStatesExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - !Sub states.${AWS::Region}.amazonaws.com
+              Action: sts:AssumeRole
+        Path: /
+        Policies:
+          - PolicyName: StatesExecutionPolicy
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource: '*'
+    NotifyDeliveries:
+      Type: AWS::Serverless::Function
+      Properties:
+        Handler: notify-delivery.handler
+        Runtime: nodejs8.10
