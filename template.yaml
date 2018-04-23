@@ -7,6 +7,13 @@ Resources:
     Properties:
       Handler: ask-delivery.handler
       Runtime: nodejs8.10
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - states:*
+              Resource: !Ref DeliveryProcessor
       Environment: 
         Variables:
           TABLE_NAME: !Ref DeliveriesTable

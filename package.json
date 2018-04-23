@@ -4,10 +4,13 @@
   "description": "",
   "main": "ask-delivery.js",
   "scripts": {
-    "package": "aws cloudformation package --template-file template.yaml --s3-bucket app-sam --output-template-file output.yaml",
+    "package": "aws cloudformation package --template-file template.yaml --s3-bucket some-like-it-hot --output-template-file output.yaml",
     "deploy": "aws cloudformation deploy --template-file output.yaml --stack-name some-like-it-hot --capabilities CAPABILITY_IAM"
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "minimal-request-promise": "^1.5.0"
+  }
 }

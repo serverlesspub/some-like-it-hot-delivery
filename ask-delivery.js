@@ -12,7 +12,7 @@ exports.handler = (event, context, callback) => {
 
 	let params = {
 		stateMachineArn: process.env.DELIVERY_STEP_FUNCTION,
-		input: `{"deliveryId": "${deliveryId}"}`  
+		input: `{"deliveryId": "${deliveryId}", "webhook": "https://3w99bhuswd.execute-api.eu-central-1.amazonaws.com/latest/character"}`  
 	};
 
 	//TODO: do something with docClient
@@ -20,10 +20,22 @@ exports.handler = (event, context, callback) => {
 	stepfunctions.startExecution(params, function(err, data) { 
 			if (err) {
 				console.log(err, err.stack); 
-				callback(err, {status: 400, headers: 'application/json', body: JSON.stringify('success') })
+				callback(err, {
+					statusCode: 400, 
+					headers: {
+						'Content-Type': 'application/json'
+					}, 
+					body: JSON.stringify(`{ "message": ${err}}`)
+				})
 				return;
 			}
 			console.log(data);
-			callback(null, {status: 200, body: JSON.stringify('success')});
+			callback(null, {
+				statusCode: 200,
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(`{ "message": "success" }`)
+			});
 		});
 };
