@@ -23,7 +23,7 @@ Resources:
     Properties:
       StageName: 'prod'
       Cors:
-        AllowOrigin: '"*"'
+        AllowOrigin: "'*'"
       DefinitionBody:
         swagger: 2.0
         info:
@@ -38,62 +38,65 @@ Resources:
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
                 responses: {}
-    DeliveriesTable:
-      Type: AWS::Serverless::SimpleTable
-      Properties:
-        PrimaryKey:
-          Name: deliveryId
-          Type: String
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
-    DeliveryProcessor:
-      Type: AWS::StepFunctions::StateMachine
-      Properties:
-        StateMachineName: DeliveryMachine
-        DefinitionString: 
-          - |-
-              {
-                "Comment": "The Some Like It Hot Delivery State Machine",
-                "StartAt": "ProcessDelivery",
-                "States": {
-                  "ProcessDelivery": {
-                    "Type": "Wait",
-                    "Seconds": 5,
-                    "Next": "NotifyDelivery"
-                  },
-                  "NotifyDelivery": {
-                    "Type": "Task",
-                    "Resource": "${lambdaArn}",
-                    "End": true
-                  }
-                }
-              }
-          - {lambdaArn: !GetAtt [ NotifyDeliveries, Arn ]}
-        RoleArn: !GetAtt [ DeliveryStatesExecutionRole, Arn ]
-    DeliveryStatesExecutionRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: 2012-10-17
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - !Sub states.${AWS::Region}.amazonaws.com
-              Action: sts:AssumeRole
-        Path: /
-        Policies:
-          - PolicyName: StatesExecutionPolicy
-            PolicyDocument:
-              Version: 2012-10-17
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - lambda:InvokeFunction
-                  Resource: '*'
-    NotifyDeliveries:
-      Type: AWS::Serverless::Function
-      Properties:
-        Handler: notify-delivery.handler
-        Runtime: nodejs8.10
+  DeliveriesTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: deliveryId
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  DeliveryProcessor:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: DeliveryMachine
+      DefinitionString: !Sub |
+        {
+          "Comment": "The Some Like It Hot Delivery State Machine",
+          "StartAt": "ProcessDelivery",
+          "Version": "1.0",
+          "States": {
+            "ProcessDelivery": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "NotifyDelivery"
+            },
+            "NotifyDelivery": {
+              "Type": "Task",
+              "Resource": "${NotifyDeliveries.Arn}",
+              "End": true
+            }
+          }
+        }
+      RoleArn: !GetAtt [ DeliveryStatesExecutionRole, Arn ]
+  DeliveryStatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: '*'
+  NotifyDeliveries:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: notify-delivery.handler
+      Runtime: nodejs8.10
+Outputs:
+  ApiUrl:
+    Description: The URL of the AskDeliveryApi endpoint 
+    Value: !Sub "https://${AskDeliveryApi}.execute-api.${AWS::Region}.amazonaws.com/${AskDeliveryApi.Stage}/deliveries"
