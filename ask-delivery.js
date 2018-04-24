@@ -14,6 +14,9 @@ exports.handler = (event, context, callback) => {
 	let address = deliveryRequest.address;
 	let deliveryId = uuidv4();
 
+
+	//TODO: validation of parameters
+
 	console.log(deliveryRequest);
 
 	docClient.putItem({
@@ -30,6 +33,7 @@ exports.handler = (event, context, callback) => {
 			input: `{"deliveryId": "${deliveryId}", "webhook": "${webhook}"}`  
 		};
 
+		//TODO: check for promises
 		stepfunctions.startExecution(params, function(err, data) { 
 			if (err) {
 				console.log(err, err.stack); 
