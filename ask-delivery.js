@@ -24,7 +24,8 @@ exports.handler = (event, context, callback) => {
 		Item: {
 			deliveryId: deliveryId,
 			webhook: webhook,
-			address: address
+			address: address,
+			status: ''
 		}
 	}).promise().then(response => {
 

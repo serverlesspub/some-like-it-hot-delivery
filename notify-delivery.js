@@ -1,22 +1,34 @@
 const rp = require('minimal-request-promise');
+const IN_PROGRESS_STATUS = 'IN-PROGRESS';
 
-exports.handler = (event, context, callback) => {
-	console.log('delivery from Step Functions received');
-    console.log(event)
+exports.handler = (event, context, cb) => {
+  console.log('delivery from Step Functions received');
+  if (!event.deliveryId || !event.webhook || !event.address) {
+    let err = 'Delivery Id and/or webhook and/or address not provided'
+    console.log(event);
+    cb({message: err});
+  }
 
-    //TODO: change status in the database that its in delivery and invoke the webhook from the delivery id,
-
-    options = {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          deliveryId: event.deliveryId
-        })
-      };
-
-    rp.post(event.webhook, options)
-        .then(data => {
-            callback(null, {});
-        })
+  docClient.putItem({
+    TableName: TABLE_NAME,
+    Item: {
+      deliveryId: event.deliveryId,
+      webhook: event.webhook,
+      address: event.address,
+      status: IN_PROGRESS_STATUS
+    }
+  }).promise().then(response => {
+    let options = {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        deliveryId: event.deliveryId,
+        status: IN_PROGRESS_STATUS
+      })
+    };
+    return rp.post(event.webhook, options)
+  }).then(data => {
+    cb(null, {});
+  });    
 };
