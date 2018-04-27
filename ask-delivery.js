@@ -5,20 +5,19 @@ const docClient = new AWS.DynamoDB.DocumentClient()
 const stepfunctions = new AWS.StepFunctions();
 const TABLE_NAME = process.env.TABLE_NAME;
 const DELIVERY_STEP_FUNCTION_ARN = process.env.DELIVERY_STEP_FUNCTION;
+const VALIDATION_MESSAGE = `You haven't provided `;
 
-exports.handler = (event, context, callback) => {
+exports.handler = (event, context, cb) => {
 	console.log('request received');
 	let deliveryRequest = JSON.parse(event.body);
+	console.log(deliveryRequest);
 
 	let webhook = deliveryRequest.webhook || 'https://3w99bhuswd.execute-api.eu-central-1.amazonaws.com/latest/character';
 	let address = deliveryRequest.address;
+	if (!webhook) cb(formatReply(`${VALIDATION_MESSAGE} a webhook`));
+	if (!address) cb(formatReply(`${VALIDATION_MESSAGE} an address`));
 	let deliveryId = uuidv4();
-
-
-	//TODO: validation of parameters
-
-	console.log(deliveryRequest);
-
+	
 	docClient.putItem({
 		TableName: TABLE_NAME,
 		Item: {
@@ -38,32 +37,26 @@ exports.handler = (event, context, callback) => {
 		stepfunctions.startExecution(params, function(err, data) { 
 			if (err) {
 				console.log(err, err.stack); 
-				callback(err, {
-					statusCode: 400, 
-					headers: {
-						'Content-Type': 'application/json'
-					}, 
-					body: JSON.stringify(`{ "message": ${err}}`)
-				})
+				cb(formatReply(err))
 				return;
 			}
 			console.log(data);
-			callback(null, {
-				statusCode: 200,
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(`{ "message": "success" }`)
-			});
+			cb(null, formatReply(null, data));
 		});
 
 	}).catch(err => {
-		callback(err, {
-			statusCode: 400, 
-			headers: {
-				'Content-Type': 'application/json'
-			}, 
-			body: JSON.stringify(`{ "message": ${err}}`)
-		});
+		callback(formatReply(err));
 	});
 };
+
+function formatReply(errorMessage, data) {
+	let statusCode = errorMessage ? 400 : 200;
+	let bodyData = errorMessage ? {message: errorMessage} : data;
+	return {
+		statusCode: statusCode,
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(bodyData)
+	};
+}
