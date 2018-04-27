@@ -1,7 +1,7 @@
 
 const AWS = require('aws-sdk');
 const uuidv4 = require('uuid/v4');
-const docClient = new AWS.DynamoDB.DocumentClient()
+const docClient = new AWS.DynamoDB.DocumentClient();
 const stepfunctions = new AWS.StepFunctions();
 const TABLE_NAME = process.env.TABLE_NAME;
 const DELIVERY_STEP_FUNCTION_ARN = process.env.DELIVERY_STEP_FUNCTION;
@@ -18,13 +18,13 @@ exports.handler = (event, context, cb) => {
 	if (!address) cb(formatReply(`${VALIDATION_MESSAGE} an address`));
 	let deliveryId = uuidv4();
 	
-	docClient.putItem({
+	docClient.put({
 		TableName: TABLE_NAME,
 		Item: {
 			deliveryId: deliveryId,
 			webhook: webhook,
 			address: address,
-			status: ''
+			status: 'REQUESTED'
 		}
 	}).promise().then(response => {
 
@@ -45,7 +45,8 @@ exports.handler = (event, context, cb) => {
 		});
 
 	}).catch(err => {
-		callback(formatReply(err));
+		console.log(err);
+		cb(formatReply(err));
 	});
 };
 

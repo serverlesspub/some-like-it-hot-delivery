@@ -1,4 +1,7 @@
 const rp = require('minimal-request-promise');
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient();
+const TABLE_NAME = process.env.TABLE_NAME;
 const IN_PROGRESS_STATUS = 'IN-PROGRESS';
 
 exports.handler = (event, context, cb) => {
@@ -9,15 +12,18 @@ exports.handler = (event, context, cb) => {
     cb({message: err});
   }
 
-  docClient.putItem({
+  docClient.put({
     TableName: TABLE_NAME,
+    Key: {
+      deliveryId: event.deliveryId
+    },
     Item: {
-      deliveryId: event.deliveryId,
       webhook: event.webhook,
       address: event.address,
       status: IN_PROGRESS_STATUS
     }
   }).promise().then(response => {
+    console.log(response);
     let options = {
       headers: {
         'Content-Type': 'application/json'
@@ -27,8 +33,13 @@ exports.handler = (event, context, cb) => {
         status: IN_PROGRESS_STATUS
       })
     };
-    return rp.post(event.webhook, options)
+    
+    return rp.post(event.webhook, options);
   }).then(data => {
+    console.log(data);
     cb(null, {});
-  });    
+  }).catch(err => {
+    console.log(err);
+    cb({message: JSON.stringify(err)});
+  })
 };

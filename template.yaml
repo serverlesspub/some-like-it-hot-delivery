@@ -14,6 +14,10 @@ Resources:
               Action:
                 - states:*
               Resource: !Ref DeliveryProcessor
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: '*'
       Environment: 
         Variables:
           TABLE_NAME: !Ref DeliveriesTable
@@ -83,6 +87,16 @@ Resources:
     Properties:
       Handler: notify-delivery.handler
       Runtime: nodejs8.10
+      Environment: 
+        Variables:
+          TABLE_NAME: !Ref DeliveriesTable
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: '*'
   AskDeliveryApi:
     Type: AWS::Serverless::Api
     Properties:
