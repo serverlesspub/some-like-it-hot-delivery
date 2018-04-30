@@ -8,9 +8,7 @@ const DELIVERY_STEP_FUNCTION_ARN = process.env.DELIVERY_STEP_FUNCTION;
 const VALIDATION_MESSAGE = `You haven't provided `;
 
 exports.handler = (event, context, cb) => {
-	console.log('request received');
 	let deliveryRequest = JSON.parse(event.body);
-	console.log(deliveryRequest);
 
 	let webhookUrl = deliveryRequest.webhookUrl || 'https://3w99bhuswd.execute-api.eu-central-1.amazonaws.com/latest/character';
 	let pickupTime = deliveryRequest.pickupTime;
@@ -47,7 +45,7 @@ exports.handler = (event, context, cb) => {
 				return;
 			}
 			console.log(data);
-			cb(null, formatReply(null, data));
+			cb(null, formatReply(null, { deliveryId: deliveryId }));
 		});
 
 	}).catch(err => {

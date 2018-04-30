@@ -5,18 +5,17 @@ const TABLE_NAME = process.env.TABLE_NAME;
 const VALIDATION_MESSAGE = `You haven't provided `;
 
 exports.handler = (event, context, cb) => {
-	console.log('DELETE delivery');
-	let deliveryRequest = JSON.parse(event.body);
-	console.log(deliveryRequest);
-	console.log(deliveryRequest.orderId);
+    
+    let orderId = event.pathParameters.orderId;
+	if (!orderId) cb(formatReply(`${VALIDATION_MESSAGE} a orderId`));
 
-	docClient.deleteItem({
+	docClient.delete({
 		TableName: TABLE_NAME,
 		Key: {
-			deliveryId: deliveryRequest.orderId
+			deliveryId: orderId
 		}
 	}).promise().then(response => {
-		cb(null, formatReply(null, deliveryRequest));
+		cb(null, formatReply(null, {}));
 	}).catch(err => {
 		cb(formatReply(err));
 	});

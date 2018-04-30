@@ -6,18 +6,17 @@ const TABLE_NAME = process.env.TABLE_NAME;
 const VALIDATION_MESSAGE = `You haven't provided `;
 
 exports.handler = (event, context, cb) => {
-	console.log('GET delivery');
-	let deliveryRequest = JSON.parse(event.body);
-	console.log(deliveryRequest);
-	console.log(deliveryRequest.orderId);
 
-	docClient.getItem({
+	let orderId = event.pathParameters.orderId;
+	if (!orderId) cb(formatReply(`${VALIDATION_MESSAGE} a orderId`));
+
+	docClient.get({
 		TableName: TABLE_NAME,
 		Key: {
-			deliveryId: deliveryRequest.orderId
+			deliveryId: orderId
 		}
 	}).promise().then(response => {
-		cb(null, formatReply(null, deliveryRequest));
+		cb(null, formatReply(null, response.Item));
 	}).catch(err => {
 		cb(formatReply(err));
 	});

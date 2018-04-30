@@ -5,14 +5,10 @@ const TABLE_NAME = process.env.TABLE_NAME;
 const VALIDATION_MESSAGE = `You haven't provided `;
 
 exports.handler = (event, context, cb) => {
-	console.log('GET deliveries');
-	let deliveryRequest = JSON.parse(event.body);
-    cb(null, formatReply(null, deliveryRequest));
-
 	docClient.scan({
 		TableName: TABLE_NAME
 	}).promise().then(response => {
-		cb(null, formatReply(null, deliveryRequest));
+		cb(null, formatReply(null, response.Items));
 	}).catch(err => {
 		cb(formatReply(err));
 	});
