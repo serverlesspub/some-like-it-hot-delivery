@@ -12,16 +12,16 @@ exports.handler = (event, context, cb) => {
     cb({message: err});
   }
 
-  docClient.put({
+  docClient.update({
     TableName: TABLE_NAME,
     Key: {
       deliveryId: event.deliveryId
     },
-    Item: {
-      webhook: event.webhook,
-      address: event.address,
-      status: IN_PROGRESS_STATUS
-    }
+    UpdateExpression: 'set deliveryStatus = :s',
+    ExpressionAttributeValues: {
+      ':s': IN_PROGRESS_STATUS
+    },
+    ReturnValues: 'UPDATED_NEW'
   }).promise().then(response => {
     console.log(response);
     let options = {
