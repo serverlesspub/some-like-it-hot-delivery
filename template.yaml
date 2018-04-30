@@ -71,7 +71,7 @@ Resources:
         AskDeliveryApi:
           Type: Api
           Properties:
-            Path: /delivery
+            Path: /delivery/{orderId}
             Method: DELETE
             RestApiId: !Ref AskDeliveryApi
   DeliveriesTable:
@@ -162,7 +162,15 @@ Resources:
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
                 responses: {}
+          /delivery/{orderId}:
             get:
+              parameters:
+                - in: path
+                  name: orderId
+                  schema:
+                    type: string
+                  required: true
+                  description: String ID of the delivery to get  
               x-amazon-apigateway-integration:
                 httpMethod: GET
                 type: aws_proxy
@@ -170,8 +178,15 @@ Resources:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDelivery.Arn}/invocations
                 responses: {}
             delete:
+              parameters:
+                - in: path
+                  name: orderId
+                  schema:
+                    type: string
+                  required: true
+                  description: String ID of the delivery to delete  
               x-amazon-apigateway-integration:
-                httpMethod: GET
+                httpMethod: DELETE
                 type: aws_proxy
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteDelivery.Arn}/invocations
