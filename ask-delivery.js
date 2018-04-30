@@ -12,25 +12,31 @@ exports.handler = (event, context, cb) => {
 	let deliveryRequest = JSON.parse(event.body);
 	console.log(deliveryRequest);
 
-	let webhook = deliveryRequest.webhook || 'https://3w99bhuswd.execute-api.eu-central-1.amazonaws.com/latest/character';
-	let address = deliveryRequest.address;
-	if (!webhook) cb(formatReply(`${VALIDATION_MESSAGE} a webhook`));
-	if (!address) cb(formatReply(`${VALIDATION_MESSAGE} an address`));
+	let webhookUrl = deliveryRequest.webhookUrl || 'https://3w99bhuswd.execute-api.eu-central-1.amazonaws.com/latest/character';
+	let pickupTime = deliveryRequest.pickupTime;
+	let pickupAddress = deliveryRequest.pickupAddress;
+	let deliveryAddress = deliveryRequest.deliveryAddress;
+	if (!webhookUrl) cb(formatReply(`${VALIDATION_MESSAGE} a webhookUrl`));
+	if (!pickupTime) cb(formatReply(`${VALIDATION_MESSAGE} a pickupTime`));
+	if (!pickupAddress) cb(formatReply(`${VALIDATION_MESSAGE} a pickupAddress`));
+	if (!deliveryAddress) cb(formatReply(`${VALIDATION_MESSAGE} a deliveryAddress`));
 	let deliveryId = uuidv4();
 	
 	docClient.put({
 		TableName: TABLE_NAME,
 		Item: {
 			deliveryId: deliveryId,
-			webhook: webhook,
-			address: address,
+			webhookUrl: webhookUrl,
+			pickupTime: pickupTime,
+			pickupAddress: pickupAddress,
+			deliveryAddress: deliveryAddress,
 			deliveryStatus: 'REQUESTED'
 		}
 	}).promise().then(response => {
 
 		let params = {
 			stateMachineArn: DELIVERY_STEP_FUNCTION_ARN,
-			input: `{"deliveryId": "${deliveryId}", "webhook": "${webhook}"}`  
+			input: `{"deliveryId": "${deliveryId}", "webhookUrl": "${webhookUrl}", "pickupAddress": "${pickupAddress}" , "deliveryAddress": "${deliveryAddress}"}`  
 		};
 
 		//TODO: check for promises

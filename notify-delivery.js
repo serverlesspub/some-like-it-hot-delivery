@@ -6,8 +6,8 @@ const IN_PROGRESS_STATUS = 'IN-PROGRESS';
 
 exports.handler = (event, context, cb) => {
   console.log('delivery from Step Functions received');
-  if (!event.deliveryId || !event.webhook || !event.address) {
-    let err = 'Delivery Id and/or webhook and/or address not provided'
+  if (!event.deliveryId || !event.webhookUrl || !event.deliveryAddress) {
+    let err = 'Delivery Id and/or webhookUrl and/or deliveryAddress not provided'
     console.log(event);
     cb({message: err});
   }

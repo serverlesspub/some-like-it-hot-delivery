@@ -29,6 +29,28 @@ Resources:
             Path: /delivery
             Method: POST
             RestApiId: !Ref AskDeliveryApi
+  GetDeliveries:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: get-deliveries.handler
+      Runtime: nodejs8.10
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Scan
+              Resource: '*'
+      Environment: 
+        Variables:
+          TABLE_NAME: !Ref DeliveriesTable
+      Events:
+        AskDeliveryApi:
+          Type: Api
+          Properties:
+            Path: /delivery
+            Method: GET
+            RestApiId: !Ref AskDeliveryApi
   GetDelivery:
     Type: AWS::Serverless::Function
     Properties:
@@ -42,14 +64,13 @@ Resources:
           Statement:
             - Effect: Allow
               Action:
-                - dynamodb:Scan
                 - dynamodb:GetItem
               Resource: '*'
       Events:
-        AskDeliveryApi:
+        GetDeliveryApi:
           Type: Api
           Properties:
-            Path: /delivery
+            Path: /delivery/{orderId}
             Method: GET
             RestApiId: !Ref AskDeliveryApi
   DeleteDelivery:
@@ -68,7 +89,7 @@ Resources:
                 - dynamodb:DeleteItem
               Resource: '*'
       Events:
-        AskDeliveryApi:
+        DeleteDeliveryApi:
           Type: Api
           Properties:
             Path: /delivery/{orderId}
@@ -161,6 +182,13 @@ Resources:
                 type: aws_proxy
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
+                responses: {}
+            get: 
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDeliveries.Arn}/invocations
                 responses: {}
           /delivery/{orderId}:
             get:
