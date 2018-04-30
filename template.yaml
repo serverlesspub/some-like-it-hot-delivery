@@ -45,7 +45,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref DeliveriesTable
       Events:
-        AskDeliveryApi:
+        GetDeliveriesApi:
           Type: Api
           Properties:
             Path: /delivery
@@ -161,6 +161,7 @@ Resources:
           Statement:
             - Effect: Allow
               Action:
+                - dynamodb:UpdateItem
                 - dynamodb:PutItem
               Resource: '*'
   AskDeliveryApi:
@@ -181,43 +182,45 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AskDelivery.Arn}/invocations"
                 responses: {}
-            get: 
+            get:
+              produces:
+              - application/json
               x-amazon-apigateway-integration:
                 httpMethod: GET
                 type: aws_proxy
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDeliveries.Arn}/invocations
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDeliveries.Arn}/invocations"
                 responses: {}
           /delivery/{orderId}:
             get:
+              produces:
+              - application/json
               parameters:
-                - in: path
-                  name: orderId
-                  schema:
-                    type: string
-                  required: true
-                  description: String ID of the delivery to get  
+              - in: path
+                name: orderId
+                type: string
+                required: true
               x-amazon-apigateway-integration:
                 httpMethod: GET
                 type: aws_proxy
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDelivery.Arn}/invocations
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDelivery.Arn}/invocations"
                 responses: {}
             delete:
+              produces:
+              - application/json
               parameters:
-                - in: path
-                  name: orderId
-                  schema:
-                    type: string
-                  required: true
-                  description: String ID of the delivery to delete  
+              - in: path
+                name: orderId
+                type: string
+                required: true
               x-amazon-apigateway-integration:
                 httpMethod: DELETE
                 type: aws_proxy
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteDelivery.Arn}/invocations
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteDelivery.Arn}/invocations"
                 responses: {}
 Outputs:
   ApiUrl:

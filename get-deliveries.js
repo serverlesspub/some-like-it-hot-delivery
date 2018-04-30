@@ -7,6 +7,7 @@ const VALIDATION_MESSAGE = `You haven't provided `;
 exports.handler = (event, context, cb) => {
 	console.log('GET deliveries');
 	let deliveryRequest = JSON.parse(event.body);
+    cb(null, formatReply(null, deliveryRequest));
 
 	docClient.scan({
 		TableName: TABLE_NAME
